@@ -7,7 +7,7 @@
 ### 1단계 — GitHub 리포지토리 생성
 
 1. [github.com/new](https://github.com/new) 에서 새 리포지토리를 만듭니다
-2. 리포지토리 이름: `lineage-checker` (원하는 이름 가능)
+2. 리포지토리 이름: `linc_copychecker`
 3. **Public**으로 설정 (GitHub Pages 무료 사용 조건)
 4. `README.md` 추가 체크박스는 해제
 
@@ -35,7 +35,7 @@ git push
 3. Source: **Deploy from a branch** 선택
 4. Branch: **main**, 폴더: **/ (root)** 선택
 5. **Save** 클릭
-6. 약 1~2분 후 `https://YOUR_USERNAME.github.io/lineage-checker` 로 접속 가능
+6. 약 1~2분 후 `https://blackhandkr.github.io/linc_copychecker` 로 접속 가능
 
 ---
 

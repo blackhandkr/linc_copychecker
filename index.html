@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>리니지 클래식 공략 도용 검사기</title>
+<title>리니지 공략 도용 검사기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -122,6 +122,7 @@
   .kw { font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 1px 7px; border-radius: 20px; }
   .kw.match { background: rgba(232,160,48,0.1); color: var(--warning); border: 0.5px solid rgba(232,160,48,0.2); }
   .kw.only { background: var(--bg3); color: var(--text3); border: 0.5px solid var(--border); }
+  .kw.board-tag { background: var(--info-bg, rgba(80,144,232,0.1)); color: var(--info, #5090e8); border: 0.5px solid rgba(80,144,232,0.2); }
 
   .notice { font-size: 12px; color: var(--text3); margin-top: 14px; line-height: 1.7; padding: 10px 14px; background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); }
 
@@ -133,7 +134,7 @@
   <div class="layout header-inner">
     <div class="logo">
       <span class="logo-mark">LINEAGE</span>
-      <span class="logo-title">공략 도용 검사기</span>
+      <span class="logo-title">리니지 공략 도용 검사기</span>
     </div>
     <span class="badge">API 키 불필요 · 완전 무료</span>
   </div>
@@ -143,26 +144,66 @@
   <span class="section-label">조사할 게시물 URL 입력</span>
   <div class="url-row">
     <input type="text" class="url-input" id="urlInput"
-      placeholder="https://www.inven.co.kr/board/lineageclassic/6485/..."/>
+      placeholder="https://www.inven.co.kr/board/lineageclassic/6485/ 또는 /lineagem/5056/ 또는 /lineage/348/..."/>
     <button class="analyze-btn" id="analyzeBtn" onclick="run()">검사하기</button>
   </div>
-  <div class="tip-bar">
-    인벤 리니지 클래식 팁 게시판(게시판 번호 6485) 게시물 URL을 입력하면, 같은 게시판의 다른 글과 자동으로 비교합니다.
-  </div>
+  <div class="tip-bar">리니지 클래식 팁(6485)·자유(6497), 리니지M(5056), 리니지(348) 게시판 게시물 URL을 입력하면, 4개 게시판 전체에서 유사 게시물을 자동으로 검색합니다.</div>
 
   <div class="divider"></div>
   <div id="area"></div>
 </main>
 
-<footer><div class="layout">lineage classic · 공략 도용 검사기 · 100% client-side · no api key required</div></footer>
+<footer><div class="layout">lineage · 공략 도용 검사기 · 100% client-side · no api key required</div></footer>
 
 <script>
-const PROXY   = 'https://api.allorigins.win/get?url=';
-const BOARD   = 'inven.co.kr/board/lineageclassic/6485';
-const BOARD_LIST = 'https://www.inven.co.kr/board/lineageclassic/6485';
-const SEARCH_URL = 'https://www.inven.co.kr/board/lineageclassic/6485?query=';
-const SEARCH_CANDIDATES = 10; // search results to compare
-const LIST_CANDIDATES   = 10; // recent posts to compare
+// Proxy list — tried in order, falls back on failure
+const PROXIES = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+const SEARCH_CANDIDATES = 10;
+const LIST_CANDIDATES   = 10;
+
+const BOARDS = {
+  classic: {
+    id: 'classic',
+    label: '리니지 클래식',
+    sub: '팁 게시판 · 6485',
+    pattern: 'inven.co.kr/board/lineageclassic/6485',
+    listUrl: 'https://www.inven.co.kr/board/lineageclassic/6485',
+    searchUrl: 'https://www.inven.co.kr/board/lineageclassic/6485?query=',
+    postRe: /inven\.co\.kr\/board\/lineageclassic\/6485\/\d+/,
+  },
+  lineagem: {
+    id: 'lineagem',
+    label: '리니지M',
+    sub: '팁 게시판 · 5056',
+    pattern: 'inven.co.kr/board/lineagem/5056',
+    listUrl: 'https://www.inven.co.kr/board/lineagem/5056',
+    searchUrl: 'https://www.inven.co.kr/board/lineagem/5056?query=',
+    postRe: /inven\.co\.kr\/board\/lineagem\/5056\/\d+/,
+  },
+  lineage: {
+    id: 'lineage',
+    label: '리니지',
+    sub: '팁 게시판 · 348',
+    pattern: 'inven.co.kr/board/lineage/348',
+    listUrl: 'https://www.inven.co.kr/board/lineage/348',
+    searchUrl: 'https://www.inven.co.kr/board/lineage/348?query=',
+    postRe: /inven\.co\.kr\/board\/lineage\/348\/\d+/,
+  },
+  classic2: {
+    id: 'classic2',
+    label: '리니지 클래식',
+    sub: '자유 게시판 · 6497',
+    pattern: 'inven.co.kr/board/lineageclassic/6497',
+    listUrl: 'https://www.inven.co.kr/board/lineageclassic/6497',
+    searchUrl: 'https://www.inven.co.kr/board/lineageclassic/6497?query=',
+    postRe: /inven\.co\.kr\/board\/lineageclassic\/6497\/\d+/,
+  },
+};
+
 
 const STOP = new Set(['이','그','저','것','수','들','등','및','을','를','이','가','은','는','에','의','도','와','과','하다','있다','없다','되다','하','에서','으로','로','가','이','한','이다','있','없','하고','또','더','때','같은','같이','위해','통해','대한','대해','많은','많이','모든','이런','이러한','그런','그러한','저런','어떤','어느','제','내','우리','자신','자체','이미','아직','이제','곧','다시','또한','그리고','하지만','그러나','그래서','따라서','즉','단','다만','오직','특히','정말','매우','아주','너무','조금','약간','잘','더욱','가장','바로','먼저','마지막','결국','사실','실제','다른','새로운','좋은','큰','작은','높은','낮은','빠른','느린','강한','약한','쉬운','어려운','중요한','필요한','가능한','다양한','여러','몇','각','각각','모두','전체','전부','전혀','항상','보통','종종','자주','가끔','때로','약','이상','이하','미만','초과','부터','까지','동안','사이','안','밖','위','아래','앞','뒤','그것','이것','저것','누구','무엇','어디','언제','왜','어떻게','얼마나','번','개','명','년','월','일','시','분','초','게시물','게시판','공략','리니지','클래식','인벤','작성','내용','정보','확인','경우','방법','사용','이용','참고','기준','현재','추천','질문','답변','댓글','글','쓰기','읽기','보기','클릭','링크','주소','아이디','닉네임','레벨','서버','캐릭터','캐릭','아이템','아이','스킬','스','퀘스트','퀘','던전','몬스터','몹','보스','파티','길드','혈맹','상점','거래','골드','경험치','스탯','능력치','공격','방어','마력','체력','마나','쿨타임','쿨']);
 
@@ -171,10 +212,17 @@ let isLoading = false;
 // ── Utilities ──────────────────────────────────────────────
 
 async function proxyFetch(url) {
-  const r = await fetch(PROXY + encodeURIComponent(url), { signal: AbortSignal.timeout(12000) });
-  if (!r.ok) throw new Error('fetch failed');
-  const j = await r.json();
-  return j.contents;
+  let lastErr;
+  for (const makeProxy of PROXIES) {
+    try {
+      const r = await fetch(makeProxy(url), { signal: AbortSignal.timeout(12000) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const text = await r.text();
+      if (text.length < 200) throw new Error('응답이 너무 짧음');
+      return text;
+    } catch(e) { lastErr = e; }
+  }
+  throw new Error('모든 프록시 실패: ' + (lastErr?.message || ''));
 }
 
 function parsePost(html) {
@@ -200,7 +248,7 @@ function parsePost(html) {
 }
 
 // Extract post links from board listing or search results page
-function extractPostLinks(html, excludeUrl) {
+function extractPostLinks(html, excludeUrl, board) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const links = [];
   const seen = new Set();
@@ -209,8 +257,7 @@ function extractPostLinks(html, excludeUrl) {
     const href = a.getAttribute('href') || '';
     let url = href.startsWith('http') ? href : (href.startsWith('/') ? 'https://www.inven.co.kr' + href : '');
     if (!url) return;
-    // Must be a board post URL (has numeric post ID after /6485/)
-    if (!/inven\.co\.kr\/board\/lineageclassic\/6485\/\d+/.test(url)) return;
+    if (!board.postRe.test(url)) return;
     // Remove query string fragments
     url = url.split('?')[0];
     if (seen.has(url)) return;
@@ -299,8 +346,9 @@ async function run() {
 
   if (!rawUrl) { area.innerHTML = '<div class="error-box">URL을 입력해주세요.</div>'; return; }
   const targetUrl = rawUrl.startsWith('http') ? rawUrl : 'https://' + rawUrl;
-  if (!targetUrl.includes(BOARD)) {
-    area.innerHTML = '<div class="error-box">인벤 리니지 클래식 팁 게시판(6485)의 URL만 검사 가능합니다.</div>';
+  const sourceBoard = Object.values(BOARDS).find(b => targetUrl.includes(b.pattern));
+  if (!sourceBoard) {
+    area.innerHTML = '<div class="error-box">지원하는 게시판의 URL이 아닙니다.<br>리니지 클래식 팁(6485)·자유(6497), 리니지M(5056), 리니지(348) 게시판 URL을 입력해주세요.</div>';
     return;
   }
 
@@ -313,7 +361,7 @@ async function run() {
       <div class="step-list">
         <div class="step active" id="s1">조사 대상 게시물 수집 중</div>
         <div class="step" id="s2">핵심 키워드 추출 중</div>
-        <div class="step" id="s3">게시판에서 유사 후보 검색 중</div>
+        <div class="step" id="s3">3개 게시판에서 유사 후보 검색 중</div>
         <div class="step" id="s4">후보 게시물 내용 수집 중</div>
         <div class="step" id="s5">유사도 분석 중</div>
       </div>
@@ -337,33 +385,32 @@ async function run() {
     const keywords = topKeywords(targetTokens, 5);
     setStep('s2', 'done', `핵심 키워드 추출 완료: ${keywords.join(', ')}`);
 
-    // Step 3: gather candidate URLs
+    // Step 3: gather candidate URLs from ALL boards
     setStep('s3', 'active');
     const candidateUrls = new Set();
     const cleanTarget = targetUrl.split('?')[0];
 
-    // 3a. search by keywords (two passes for variety)
     const searchPasses = [
       keywords.slice(0, 3).join(' '),
       keywords.slice(2, 5).join(' '),
     ];
-    for (const q of searchPasses) {
-      if (!q.trim()) continue;
-      try {
-        const shtml = await proxyFetch(SEARCH_URL + encodeURIComponent(q));
-        extractPostLinks(shtml, cleanTarget).slice(0, SEARCH_CANDIDATES).forEach(u => candidateUrls.add(u));
-      } catch { /* ignore search failure */ }
-    }
 
-    // 3b. recent posts from board listing (fallback + extra coverage)
-    try {
-      const lhtml = await proxyFetch(BOARD_LIST);
-      extractPostLinks(lhtml, cleanTarget).slice(0, LIST_CANDIDATES).forEach(u => candidateUrls.add(u));
-    } catch { /* ignore */ }
+    await Promise.allSettled(Object.values(BOARDS).flatMap(board => [
+      // search passes per board
+      ...searchPasses.filter(q => q.trim()).map(async q => {
+        const shtml = await proxyFetch(board.searchUrl + encodeURIComponent(q));
+        extractPostLinks(shtml, cleanTarget, board).slice(0, SEARCH_CANDIDATES).forEach(u => candidateUrls.add(u));
+      }),
+      // recent listing per board
+      (async () => {
+        const lhtml = await proxyFetch(board.listUrl);
+        extractPostLinks(lhtml, cleanTarget, board).slice(0, LIST_CANDIDATES).forEach(u => candidateUrls.add(u));
+      })(),
+    ]));
 
-    const urlList = [...candidateUrls].slice(0, 20);
+    const urlList = [...candidateUrls].slice(0, 50);
     if (urlList.length === 0) throw new Error('비교할 게시물을 찾지 못했습니다. 게시판 접근이 제한되어 있거나 검색 결과가 없습니다.');
-    setStep('s3', 'done', `후보 ${urlList.length}건 발견`);
+    setStep('s3', 'done', `3개 게시판 후보 ${urlList.length}건 발견`);
 
     // Step 4: fetch candidate posts (parallel, best-effort)
     setStep('s4', 'active');
@@ -371,7 +418,8 @@ async function run() {
       urlList.map(async u => {
         const html = await proxyFetch(u);
         const post = parsePost(html);
-        return { url: u, ...post };
+        const boardTag = Object.values(BOARDS).find(b => b.postRe.test(u));
+        return { url: u, boardLabel: boardTag ? boardTag.label : '', ...post };
       })
     );
     const candidates = fetched
@@ -465,7 +513,7 @@ function renderResult(target, targetUrl, results) {
         <td class="rank-num">${i+1}</td>
         <td>
           <div class="post-name"><a href="${esc(r.url)}" target="_blank">${esc(r.title || '제목 없음')}</a></div>
-          <div class="kw-row">${sharedKw}${onlyKw}</div>
+          <div class="kw-row">${r.boardLabel ? `<span class="kw board-tag">${esc(r.boardLabel)}</span>` : ''}${sharedKw}${onlyKw}</div>
         </td>
         <td class="bar-cell">
           <div class="bar-wrap">

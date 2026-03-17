@@ -271,13 +271,58 @@ function extractPostLinks(html, excludeUrl, board) {
 
 // ── NLP ────────────────────────────────────────────────────
 
+// ── NLP helpers ──────────────────────────────────────────
+
+// Korean verb/adjective ending normalization → stem
+function normalizeStem(word) {
+  if (!word || !/[\uAC00-\uD7A3]/.test(word)) return word;
+  // 합니다/합니까/했습니다/하였습니다 → 하
+  word = word.replace(/(합니다|합니까|했습니다|하였습니다|했어요|해요|하세요|하였|했|해서|하여|하고|하면|하는|하기|하지|하며|하니|한다|함)$/, '하');
+  // 있습니다/있어요/있어서/있으면/있는/있다 → 있
+  word = word.replace(/(있습니다|있어요|있습니까|있어서|있으면|있는데|있으니|있고|있지|있다|있음)$/, '있');
+  // 없습니다/없어요/없다 → 없
+  word = word.replace(/(없습니다|없어요|없습니까|없어서|없으면|없는데|없으니|없고|없지|없다|없음)$/, '없');
+  // 됩니다/되었습니다/됐습니다 → 되
+  word = word.replace(/(됩니다|됩니까|되었습니다|됐습니다|되었어요|됐어요|되어서|돼서|되면|되는|되고|되지|된다|됨)$/, '되');
+  // 입니다/이에요/이어요 → 이
+  word = word.replace(/(입니다|입니까|이에요|이어요|이어서|이라서|이면|이고|이지|인데|이라|임)$/, '이');
+  // 줍니다/주세요/줍니까 → 주
+  word = word.replace(/(줍니다|줍니까|주세요|주었습니다|줬습니다|주어서|줘서|주면|주는|주고|주지|준다|줌)$/, '주');
+  // 나옵니다/나와요 → 나오
+  word = word.replace(/(나옵니다|나옵니까|나와요|나와서|나오면|나오는|나오고|나온다|나옴)$/, '나오');
+  // Generic -ㅂ니다/-습니다 endings not caught above
+  word = word.replace(/(ㅂ니다|습니다|ㅂ니까|습니까)$/, '');
+  // Strip common verb/adjective suffixes to get cleaner stems
+  word = word.replace(/(이용하|접속하|진행하|실행하|설치하|확인하|제공하|시작하|완료하|설정하|활용하|적용하|추가하|제거하|변경하|선택하|입력하|출력하|저장하|불러오|가져오|나타나|사라지)$/, (m) => m.slice(0,-1));
+  // Strip -아/어/여서, -고서, -는데 endings  
+  word = word.replace(/(아서|어서|여서|고서|는데|으며|하며|이며)$/, '');
+  return word;
+}
+
 function stripParticles(word) {
   if (!word || !/[\uAC00-\uD7A3]/.test(word)) return word;
-  const particles = ['에서','으로','부터','까지','에게','한테','처럼','보다','이라는','라는','이라도','이라고','이었','이고','이며','이면','이나','이죠','으로서','로서','으로써','로써','이므로','이어서','으로도','로도','에서도','에서는','에서가','에는','에만','에도','들이','들을','들은','들도','들과','들에','들의','들로','들만','들에서','것이','것을','것은','것도','것만','것과','것에','에서','에서의','이에서','이에','이게','이거','이것','에선','으론','로선','에서의','이의','가의','을의','를의','도의','만의','과의','와의','이','가','을','를','은','는','의','에','도','만','과','와','로','으로'];
+  const particles = ['에서의','으로서','로서','으로써','로써','이므로','으로도','로도','에서도','에서는','에서가','들이','들을','들은','들도','들과','들에','들의','들로','들만','들에서','것이','것을','것은','것도','것만','것과','것에','이라는','라는','이라도','이라고','에서','으로','부터','까지','에게','한테','처럼','보다','이고','이며','이면','이나','이랑','으론','에선','이에','이게','이거','이것','이의','가의','을의','를의','도의','만의','과의','와의','이','가','을','를','은','는','의','에','도','만','과','와','로'];
   for (const p of particles) {
     if (word.endsWith(p) && word.length > p.length + 1) return word.slice(0, -p.length);
   }
   return word;
+}
+
+// Token type classifier for weighting
+function tokenWeight(token) {
+  // English acronym (all caps, 2-5 chars): ATS, PC, HP, MP
+  if (/^[A-Z]{2,5}$/.test(token)) return 3.5;
+  // Mixed Korean+English or English+Korean: PC방, 아이템ID
+  if (/[a-zA-Z]/.test(token) && /[\uAC00-\uD7A3]/.test(token)) return 3.0;
+  // Pure English word (lowercase): google, discord
+  if (/^[a-zA-Z]{2,}$/.test(token)) return 2.5;
+  // Number+Korean unit: 10분, 100골드 — lower value
+  if (/^\d+[\uAC00-\uD7A3]+$/.test(token)) return 0.4;
+  // Pure number
+  if (/^\d+$/.test(token)) return 0.1;
+  // Long Korean word (≥4 chars) tends to be specific
+  if (/^[\uAC00-\uD7A3]+$/.test(token) && token.length >= 4) return 1.4;
+  return 1.0;
 }
 
 function extractNgrams(tokens) {
@@ -296,57 +341,37 @@ function tokenize(text) {
     .split(/\s+/).map(t => t.trim()).filter(Boolean);
   const tokens = [];
   for (const t of raw) {
-    const s = stripParticles(t);
-    if (s.length >= 2 && !STOP.has(s)) tokens.push(s);
+    const stripped = stripParticles(t);
+    const stemmed = normalizeStem(stripped);
+    if (stemmed.length >= 2 && !STOP.has(stemmed) && !STOP.has(stripped)) {
+      tokens.push(stemmed);
+    }
   }
   return tokens;
-}
-
-function buildTF(tokens) {
-  const tf = {};
-  tokens.forEach(t => { tf[t] = (tf[t]||0) + 1; });
-  const len = tokens.length || 1;
-  Object.keys(tf).forEach(t => tf[t] /= len);
-  return tf;
-}
-
-function buildIDF(docs) {
-  const df = {}, N = docs.length;
-  docs.forEach(tokens => {
-    new Set(extractNgrams(tokens)).forEach(t => { df[t] = (df[t]||0) + 1; });
-  });
-  const idf = {};
-  Object.keys(df).forEach(t => { idf[t] = Math.log((N+1)/(df[t]+1)) + 1; });
-  return idf;
-}
-
-function tfidfVec(tokens, idf) {
-  const ngrams = extractNgrams(tokens);
-  const tf = buildTF(ngrams);
-  const vec = {};
-  Object.keys(tf).forEach(t => { vec[t] = tf[t] * (idf[t] || Math.log(2) + 1); });
-  return vec;
-}
-
-function cosine(a, b) {
-  let dot=0, ma=0, mb=0;
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  keys.forEach(k => {
-    const av=a[k]||0, bv=b[k]||0;
-    dot+=av*bv; ma+=av*av; mb+=bv*bv;
-  });
-  return (!ma||!mb) ? 0 : dot / Math.sqrt(ma*mb);
 }
 
 function topKeywords(tokens, n=12) {
   const ngrams = extractNgrams(tokens);
   const freq = {};
   ngrams.forEach(t => { freq[t] = (freq[t]||0) + 1; });
+
   return Object.entries(freq)
-    .map(([term, f]) => ({ term, score: f * (term.includes(' ') ? 1.6 : 1.0) }))
+    .map(([term, f]) => {
+      // Base score: frequency
+      let score = f;
+      // Bigram boost
+      if (term.includes(' ')) {
+        const [a, b] = term.split(' ');
+        score *= 1.8 * Math.sqrt(tokenWeight(a) * tokenWeight(b));
+      } else {
+        score *= tokenWeight(term);
+      }
+      return { term, score };
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, n).map(e => e.term);
 }
+
 
 function riskLevel(score) {
   if (score >= 0.70) return 'high';

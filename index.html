@@ -271,11 +271,35 @@ function extractPostLinks(html, excludeUrl, board) {
 
 // ── NLP ────────────────────────────────────────────────────
 
+function stripParticles(word) {
+  if (!word || !/[\uAC00-\uD7A3]/.test(word)) return word;
+  const particles = ['에서','으로','부터','까지','에게','한테','처럼','보다','이라는','라는','이라도','이라고','이었','이고','이며','이면','이나','이죠','으로서','로서','으로써','로써','이므로','이어서','으로도','로도','에서도','에서는','에서가','에는','에만','에도','들이','들을','들은','들도','들과','들에','들의','들로','들만','들에서','것이','것을','것은','것도','것만','것과','것에','에서','에서의','이에서','이에','이게','이거','이것','에선','으론','로선','에서의','이의','가의','을의','를의','도의','만의','과의','와의','이','가','을','를','은','는','의','에','도','만','과','와','로','으로'];
+  for (const p of particles) {
+    if (word.endsWith(p) && word.length > p.length + 1) return word.slice(0, -p.length);
+  }
+  return word;
+}
+
+function extractNgrams(tokens) {
+  const result = [...tokens];
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if (!/^\d+$/.test(tokens[i]) && !/^\d+$/.test(tokens[i+1])) {
+      result.push(tokens[i] + ' ' + tokens[i+1]);
+    }
+  }
+  return result;
+}
+
 function tokenize(text) {
-  return text
+  const raw = text
     .replace(/[^\uAC00-\uD7A3\u3130-\u318F\u1100-\u11FFa-zA-Z0-9]/g, ' ')
-    .split(/\s+/)
-    .filter(t => t.length >= 2 && !STOP.has(t));
+    .split(/\s+/).map(t => t.trim()).filter(Boolean);
+  const tokens = [];
+  for (const t of raw) {
+    const s = stripParticles(t);
+    if (s.length >= 2 && !STOP.has(s)) tokens.push(s);
+  }
+  return tokens;
 }
 
 function buildTF(tokens) {
@@ -289,7 +313,7 @@ function buildTF(tokens) {
 function buildIDF(docs) {
   const df = {}, N = docs.length;
   docs.forEach(tokens => {
-    new Set(tokens).forEach(t => { df[t] = (df[t]||0) + 1; });
+    new Set(extractNgrams(tokens)).forEach(t => { df[t] = (df[t]||0) + 1; });
   });
   const idf = {};
   Object.keys(df).forEach(t => { idf[t] = Math.log((N+1)/(df[t]+1)) + 1; });
@@ -297,7 +321,8 @@ function buildIDF(docs) {
 }
 
 function tfidfVec(tokens, idf) {
-  const tf = buildTF(tokens);
+  const ngrams = extractNgrams(tokens);
+  const tf = buildTF(ngrams);
   const vec = {};
   Object.keys(tf).forEach(t => { vec[t] = tf[t] * (idf[t] || Math.log(2) + 1); });
   return vec;
@@ -314,9 +339,13 @@ function cosine(a, b) {
 }
 
 function topKeywords(tokens, n=12) {
-  const freq={};
-  tokens.forEach(t => { freq[t]=(freq[t]||0)+1; });
-  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,n).map(e=>e[0]);
+  const ngrams = extractNgrams(tokens);
+  const freq = {};
+  ngrams.forEach(t => { freq[t] = (freq[t]||0) + 1; });
+  return Object.entries(freq)
+    .map(([term, f]) => ({ term, score: f * (term.includes(' ') ? 1.6 : 1.0) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n).map(e => e.term);
 }
 
 function riskLevel(score) {

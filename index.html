@@ -196,7 +196,7 @@ const BOARDS = {
   classic2: {
     id: 'classic2',
     label: '리니지 클래식',
-    sub: '자유 게시판 · 6497',
+    sub: 'NC AI · 6497',
     pattern: 'inven.co.kr/board/lineageclassic/6497',
     listUrl: 'https://www.inven.co.kr/board/lineageclassic/6497',
     searchUrl: 'https://www.inven.co.kr/board/lineageclassic/6497?query=',
@@ -480,30 +480,68 @@ async function run() {
     const candidateUrls = new Set();
     const cleanTarget = targetUrl.split('?')[0];
 
+    // Extract numeric post ID from target URL
+    const postIdMatch = targetUrl.match(/\/(\d+)(?:\?|$)/);
+    const targetPostId = postIdMatch ? parseInt(postIdMatch[1]) : null;
+
+    // Strategy A: fetch board listing + search pages
     const searchPasses = [
       keywords.slice(0, 3).join(' '),
       keywords.slice(2, 5).join(' '),
     ];
-
     await Promise.allSettled(Object.values(BOARDS).flatMap(board => [
-      // search passes per board
       ...searchPasses.filter(q => q.trim()).map(async q => {
         const shtml = await proxyFetch(board.searchUrl + encodeURIComponent(q));
         extractPostLinks(shtml, cleanTarget, board).slice(0, SEARCH_CANDIDATES).forEach(u => candidateUrls.add(u));
       }),
-      // recent listing per board
       (async () => {
         const lhtml = await proxyFetch(board.listUrl);
         extractPostLinks(lhtml, cleanTarget, board).slice(0, LIST_CANDIDATES).forEach(u => candidateUrls.add(u));
       })(),
     ]));
 
-    const urlList = [...candidateUrls].slice(0, 50);
-    if (urlList.length === 0) throw new Error('비교할 게시물을 찾지 못했습니다. 게시판 접근이 제한되어 있거나 검색 결과가 없습니다.');
-    setStep('s3', 'done', `3개 게시판 후보 ${urlList.length}건 발견`);
+    // Strategy B: if listing/search gave nothing (JS-rendered pages),
+    // generate candidates by sampling post IDs around the target
+    if (candidateUrls.size === 0 && targetPostId !== null) {
+      // Fetch the board's first page to find the latest post ID
+      let latestId = targetPostId + 200; // conservative upper estimate
+      try {
+        const lhtml = await proxyFetch(sourceBoard.listUrl);
+        const ids = [...lhtml.matchAll(/\/\d{4,6}(?:\?|")/g)]
+          .map(m => parseInt(m[0].replace(/\D/g,'')))
+          .filter(n => n > 0 && n < 1e7);
+        if (ids.length > 0) latestId = Math.max(...ids);
+      } catch { /* use estimate */ }
 
-    // Step 4: fetch candidate posts (parallel, best-effort)
-    setStep('s4', 'active');
+      const candidates = new Set();
+      // Near target: ±100 posts (same board as target)
+      for (let d = 1; d <= 100 && candidates.size < 30; d++) {
+        if (targetPostId - d > 0) candidates.add(targetPostId - d);
+        candidates.add(targetPostId + d);
+      }
+      // Recent posts: top 30 from latest
+      for (let i = latestId; i > latestId - 150 && candidates.size < 60; i--) {
+        if (i !== targetPostId && i > 0) candidates.add(i);
+      }
+
+      // Build full URLs for all boards
+      for (const board of Object.values(BOARDS)) {
+        for (const id of candidates) {
+          candidateUrls.add(`${board.listUrl}/${id}`);
+        }
+      }
+    }
+
+    // Shuffle to avoid always hitting the same range first, then cap
+    const urlList = [...candidateUrls]
+      .filter(u => u !== cleanTarget)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 50);
+
+    if (urlList.length === 0) throw new Error('비교할 게시물을 찾지 못했습니다. 게시판 접근이 제한되어 있거나 검색 결과가 없습니다.');
+    setStep('s3', 'done', `4개 게시판 후보 ${urlList.length}건 발견`);
+
+        setStep('s4', 'active');
     const fetched = await Promise.allSettled(
       urlList.map(async u => {
         const html = await proxyFetch(u);

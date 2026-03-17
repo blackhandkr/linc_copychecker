@@ -8,608 +8,324 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0e0e0f;
-    --bg2: #161618;
-    --bg3: #1e1e21;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #e8e8ea;
-    --text2: #8a8a92;
-    --text3: #55555c;
-    --accent: #e8a030;
-    --accent2: #b87820;
-    --danger: #e85050;
-    --danger-bg: rgba(232,80,80,0.1);
-    --warning: #e8a030;
-    --warning-bg: rgba(232,160,48,0.1);
-    --success: #4caf80;
-    --success-bg: rgba(76,175,128,0.1);
-    --radius: 8px;
-    --radius-lg: 12px;
+    --bg: #0e0e0f; --bg2: #161618; --bg3: #1e1e21;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+    --text: #e8e8ea; --text2: #8a8a92; --text3: #55555c;
+    --accent: #e8a030; --accent2: #c88820;
+    --danger: #e85050; --danger-bg: rgba(232,80,80,0.1);
+    --warning: #e8a030; --warning-bg: rgba(232,160,48,0.1);
+    --success: #4caf80; --success-bg: rgba(76,175,128,0.1);
+    --info: #5090e8; --info-bg: rgba(80,144,232,0.1);
+    --radius: 8px; --radius-lg: 12px;
   }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+  .layout { max-width: 780px; margin: 0 auto; padding: 0 20px; }
+  header { border-bottom: 0.5px solid var(--border); padding: 18px 0; margin-bottom: 36px; }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: baseline; gap: 10px; }
+  .logo-mark { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent); letter-spacing: 0.05em; }
+  .logo-title { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+  .badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--success); background: var(--success-bg); border: 0.5px solid rgba(76,175,128,0.25); padding: 3px 10px; border-radius: 20px; letter-spacing: 0.04em; }
 
-  body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    line-height: 1.6;
-  }
+  .section-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 8px; }
 
-  /* ── Layout ── */
-  .layout { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+  .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 8px; }
+  .card + .card { margin-top: 0; }
 
-  header {
-    border-bottom: 0.5px solid var(--border);
-    padding: 20px 0;
-    margin-bottom: 40px;
-  }
-  .header-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }
-  .logo {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-  .logo-mark {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--accent);
-    letter-spacing: 0.04em;
-  }
-  .logo-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: -0.02em;
-  }
-  .key-btn {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--text3);
-    background: none;
-    border: 0.5px solid var(--border);
-    padding: 5px 12px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.04em;
-  }
-  .key-btn:hover { border-color: var(--border2); color: var(--text2); }
-
-  /* ── Screens ── */
-  .screen { display: none; }
-  .screen.active { display: block; }
-
-  /* ── Setup screen ── */
-  .setup-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 60px 0;
-    text-align: center;
-  }
-  .setup-icon {
-    width: 52px; height: 52px;
-    background: var(--bg3);
-    border: 0.5px solid var(--border2);
-    border-radius: var(--radius-lg);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    margin-bottom: 20px;
-  }
-  .setup-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.03em; }
-  .setup-desc { font-size: 14px; color: var(--text2); max-width: 420px; line-height: 1.7; margin-bottom: 28px; }
-  .setup-box {
-    width: 100%; max-width: 440px;
-    background: var(--bg2);
-    border: 0.5px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-    text-align: left;
-  }
-  .form-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--text3);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 8px;
-  }
-  .form-input {
-    width: 100%;
-    background: var(--bg3);
-    border: 0.5px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .form-input:focus { border-color: var(--accent2); }
-  .form-input::placeholder { color: var(--text3); }
-  .form-hint {
-    font-size: 12px;
-    color: var(--text3);
-    margin-top: 8px;
-    line-height: 1.5;
-  }
-  .form-hint a { color: var(--accent2); text-decoration: none; }
-  .form-hint a:hover { text-decoration: underline; }
-  .btn-primary {
-    width: 100%;
-    background: var(--accent);
-    color: #0e0e0f;
-    border: none;
-    border-radius: var(--radius);
-    padding: 11px 20px;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 16px;
-    transition: background 0.15s;
-  }
-  .btn-primary:hover { background: #f0b040; }
-  .btn-primary:disabled { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
-
-  /* ── Main screen ── */
-  .section-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: var(--text3);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 10px;
-  }
-
-  .url-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 28px;
-  }
+  .url-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .url-label span { font-family: 'IBM Plex Mono', monospace; font-size: 10px; background: var(--bg3); border: 0.5px solid var(--border2); padding: 1px 7px; border-radius: 20px; color: var(--text2); }
   .url-input {
-    flex: 1;
-    background: var(--bg2);
-    border: 0.5px solid var(--border2);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 13px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.15s;
-    font-family: 'IBM Plex Mono', monospace;
+    width: 100%; background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius);
+    padding: 9px 13px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text);
+    outline: none; transition: border-color 0.15s;
   }
   .url-input:focus { border-color: var(--accent2); }
-  .url-input::placeholder { color: var(--text3); font-size: 12px; }
+  .url-input::placeholder { color: var(--text3); }
+
+  .how-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .vs-badge { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); background: var(--bg3); border: 0.5px solid var(--border); border-radius: 20px; padding: 4px 12px; text-align: center; white-space: nowrap; }
+
   .analyze-btn {
-    background: var(--accent);
-    color: #0e0e0f;
-    border: none;
-    border-radius: var(--radius);
-    padding: 10px 20px;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s;
-    flex-shrink: 0;
+    width: 100%; background: var(--accent); color: #0e0e0f; border: none; border-radius: var(--radius);
+    padding: 11px 20px; font-family: 'Noto Sans KR', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s; margin-top: 4px;
   }
   .analyze-btn:hover { background: #f0b040; }
   .analyze-btn:disabled { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
 
-  .tip-bar {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 12px;
-    color: var(--text3);
-    margin-bottom: 28px;
-    line-height: 1.6;
-  }
+  .tip-bar { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--text3); margin-top: 12px; line-height: 1.7; }
+  .tip-bar a { color: var(--accent2); text-decoration: none; }
+  .tip-bar a:hover { text-decoration: underline; }
 
-  /* ── Loading ── */
-  .loading-panel {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 28px 24px;
-  }
-  .loading-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text2);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .spinner {
-    width: 14px; height: 14px;
-    border: 1.5px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    flex-shrink: 0;
-  }
+  .divider { height: 0.5px; background: var(--border); margin: 24px 0; }
+
+  /* loading */
+  .loading-panel { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 28px 24px; }
+  .loading-title { font-size: 13px; font-weight: 500; color: var(--text2); display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .spinner { width: 13px; height: 13px; border: 1.5px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .step-list { display: flex; flex-direction: column; gap: 6px; }
-  .step-item {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--text3);
-    padding-left: 18px;
-    position: relative;
-  }
+  .step-list { display: flex; flex-direction: column; gap: 5px; }
+  .step-item { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text3); padding-left: 18px; position: relative; }
   .step-item::before { content: '·'; position: absolute; left: 6px; }
   .step-item.active { color: var(--text2); }
   .step-item.done { color: var(--success); }
   .step-item.done::before { content: '✓'; }
 
-  /* ── Error ── */
-  .error-panel {
-    background: var(--danger-bg);
-    border: 0.5px solid rgba(232,80,80,0.25);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    font-size: 13px;
-    color: var(--danger);
-  }
+  /* error */
+  .error-panel { background: var(--danger-bg); border: 0.5px solid rgba(232,80,80,0.25); border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: var(--danger); line-height: 1.8; }
 
-  /* ── Result ── */
-  .result-section { margin-bottom: 24px; }
+  /* result */
+  .result-section { margin-bottom: 22px; }
+  .score-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .score-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+  .score-card-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .score-card-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score-card-url { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--accent2); text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score-card-url:hover { text-decoration: underline; }
 
-  .post-card {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 16px 18px;
-  }
-  .post-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-  .post-card-summary { font-size: 13px; color: var(--text2); line-height: 1.7; }
-  .post-card-link {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--accent2);
-    text-decoration: none;
-    display: block;
-    margin-top: 8px;
-    word-break: break-all;
-  }
-  .post-card-link:hover { text-decoration: underline; }
-
-  .risk-banner {
-    border-radius: var(--radius-lg);
-    padding: 16px 18px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
+  .risk-banner { border-radius: var(--radius-lg); padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
   .risk-banner.high { background: var(--danger-bg); border: 0.5px solid rgba(232,80,80,0.25); }
   .risk-banner.medium { background: var(--warning-bg); border: 0.5px solid rgba(232,160,48,0.25); }
-  .risk-banner.low, .risk-banner.none { background: var(--success-bg); border: 0.5px solid rgba(76,175,128,0.25); }
-  .risk-banner.unknown { background: var(--bg2); border: 0.5px solid var(--border); }
-  .risk-glyph {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 22px;
-    flex-shrink: 0;
-    line-height: 1;
-  }
+  .risk-banner.low { background: var(--success-bg); border: 0.5px solid rgba(76,175,128,0.25); }
+  .risk-glyph { font-family: 'IBM Plex Mono', monospace; font-size: 24px; flex-shrink: 0; line-height: 1; }
   .risk-glyph.high { color: var(--danger); }
   .risk-glyph.medium { color: var(--warning); }
-  .risk-glyph.low, .risk-glyph.none { color: var(--success); }
-  .risk-glyph.unknown { color: var(--text3); }
-  .risk-label {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
+  .risk-glyph.low { color: var(--success); }
+  .risk-label { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
   .risk-label.high { color: var(--danger); }
   .risk-label.medium { color: var(--warning); }
-  .risk-label.low, .risk-label.none { color: var(--success); }
-  .risk-label.unknown { color: var(--text2); }
-  .risk-score {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    margin-top: 3px;
-  }
-  .risk-score.high { color: rgba(232,80,80,0.7); }
-  .risk-score.medium { color: rgba(232,160,48,0.7); }
-  .risk-score.low, .risk-score.none { color: rgba(76,175,128,0.7); }
-  .risk-score.unknown { color: var(--text3); }
+  .risk-label.low { color: var(--success); }
+  .risk-sub { font-family: 'IBM Plex Mono', monospace; font-size: 11px; margin-top: 3px; }
+  .risk-sub.high { color: rgba(232,80,80,0.7); }
+  .risk-sub.medium { color: rgba(232,160,48,0.7); }
+  .risk-sub.low { color: rgba(76,175,128,0.7); }
 
-  .explanation-card {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 16px 18px;
-    font-size: 13px;
-    color: var(--text2);
-    line-height: 1.8;
-  }
+  .meter-wrap { margin: 16px 0; }
+  .meter-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+  .meter-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .meter-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .meter-fill.high { background: var(--danger); }
+  .meter-fill.medium { background: var(--warning); }
+  .meter-fill.low { background: var(--success); }
 
-  .source-item {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 14px 18px;
-    margin-bottom: 8px;
-  }
-  .source-item:last-child { margin-bottom: 0; }
-  .source-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-  .source-title { font-size: 13px; font-weight: 500; line-height: 1.4; }
-  .sim-badge {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    letter-spacing: 0.04em;
-  }
-  .sim-badge.high { background: var(--danger-bg); color: var(--danger); border: 0.5px solid rgba(232,80,80,0.2); }
-  .sim-badge.medium { background: var(--warning-bg); color: var(--warning); border: 0.5px solid rgba(232,160,48,0.2); }
-  .sim-badge.low { background: var(--bg3); color: var(--text3); border: 0.5px solid var(--border); }
-  .source-evidence { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 6px; }
-  .source-link {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--accent2);
-    text-decoration: none;
-    word-break: break-all;
-  }
-  .source-link:hover { text-decoration: underline; }
+  .keywords-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .kw-chip { font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 20px; padding: 3px 10px; color: var(--text2); }
+  .kw-chip.match { background: rgba(232,160,48,0.12); border-color: rgba(232,160,48,0.3); color: var(--warning); }
 
-  .notice {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 12px;
-    color: var(--text3);
-    line-height: 1.6;
-    margin-top: 8px;
-  }
+  .detail-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .detail-card p { font-size: 13px; color: var(--text2); line-height: 1.8; }
 
-  .divider { height: 0.5px; background: var(--border); margin: 8px 0 24px; }
+  .search-card { background: var(--info-bg); border: 0.5px solid rgba(80,144,232,0.25); border-radius: var(--radius-lg); padding: 14px 18px; }
+  .search-card p { font-size: 13px; color: var(--info); line-height: 1.7; }
+  .search-card a { color: var(--info); font-weight: 500; }
+  .search-card a:hover { text-decoration: underline; }
 
-  footer {
-    border-top: 0.5px solid var(--border);
-    padding: 20px 0;
-    margin-top: 60px;
-    text-align: center;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--text3);
-  }
+  .notice { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--text3); line-height: 1.6; margin-top: 8px; }
+
+  footer { border-top: 0.5px solid var(--border); padding: 20px 0; margin-top: 60px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); }
 </style>
 </head>
 <body>
-
 <header>
   <div class="layout header-inner">
     <div class="logo">
       <span class="logo-mark">LINEAGE</span>
       <span class="logo-title">공략 도용 검사기</span>
     </div>
-    <button class="key-btn" id="changeKeyBtn" onclick="showSetup()" style="display:none;">API_KEY 변경</button>
+    <span class="badge">API 키 불필요 · 완전 무료</span>
   </div>
 </header>
 
 <main class="layout">
+  <div id="inputSection">
+    <span class="section-label">비교할 게시물 URL 입력</span>
 
-  <!-- Setup Screen -->
-  <div class="screen active" id="setupScreen">
-    <div class="setup-wrap">
-      <div class="setup-icon">🔑</div>
-      <div class="setup-title">Gemini API 키 설정</div>
-      <div class="setup-desc">
-        이 도구는 Google Gemini AI를 사용합니다.<br>
-        API 키는 브라우저에만 저장되며, 서버로 전송되지 않습니다.
+    <div class="how-row">
+      <div class="card" style="margin-bottom:0;">
+        <div class="url-label"><span>A</span> 도용 의심 게시물</div>
+        <input type="text" class="url-input" id="urlA" placeholder="https://www.inven.co.kr/board/lineageclassic/6485/..."/>
       </div>
-      <div class="setup-box">
-        <label class="form-label" for="apiKeyInput">GEMINI API KEY</label>
-        <input
-          type="password"
-          class="form-input"
-          id="apiKeyInput"
-          placeholder="AIza..."
-          autocomplete="off"
-        />
-        <div class="form-hint">
-          <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>에서
-          무료로 발급받을 수 있습니다. (구글 계정 로그인 필요)
-        </div>
-        <button class="btn-primary" onclick="saveKey()">저장하고 시작하기</button>
+      <div class="vs-badge">VS</div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="url-label"><span>B</span> 원본 의심 게시물</div>
+        <input type="text" class="url-input" id="urlB" placeholder="https://www.inven.co.kr/board/lineageclassic/6485/..."/>
       </div>
     </div>
-  </div>
 
-  <!-- Main Screen -->
-  <div class="screen" id="mainScreen">
-
-    <span class="section-label">게시물 URL 입력</span>
-    <div class="url-row">
-      <input
-        type="text"
-        class="url-input"
-        id="urlInput"
-        placeholder="https://www.inven.co.kr/board/lineageclassic/6485/..."
-      />
-      <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">분석하기</button>
-    </div>
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">유사도 분석하기</button>
 
     <div class="tip-bar">
-      인벤 리니지 클래식 팁 게시판(게시판 번호 6485)의 게시물 URL만 분석 가능합니다.
-      분석에는 20~40초 정도 소요됩니다.
+      원본으로 의심되는 게시물 URL을 모를 경우: <a href="https://www.inven.co.kr/search/webzine/news/?query=" target="_blank" id="searchLink">인벤 검색</a>에서 키워드로 먼저 후보를 찾아보세요. · 두 URL 모두 인벤 리니지 클래식 팁 게시판(6485) 게시물이어야 합니다.
     </div>
-
-    <div id="resultArea"></div>
   </div>
 
+  <div class="divider"></div>
+  <div id="resultArea"></div>
 </main>
 
-<footer>
-  <div class="layout">lineage classic · 공략 도용 검사기 · powered by gemini</div>
-</footer>
+<footer><div class="layout">lineage classic · 공략 도용 검사기 · 100% client-side · no api key required</div></footer>
 
 <script>
-const BOARD_URL = 'inven.co.kr/board/lineageclassic/6485';
-const MODEL = 'gemini-2.0-flash';
-const SYSTEM_PROMPT = `당신은 한국 게임 커뮤니티 게시물의 표절 탐지 전문가입니다.
-인벤 리니지 클래식 팁 게시판(inven.co.kr/board/lineageclassic/6485)의 게시물 URL을 받으면:
-1. 웹 검색으로 해당 게시물의 제목과 본문 내용을 확인합니다
-2. 게시물의 핵심 내용, 전략, 특이한 표현, 수치를 추출합니다
-3. 같은 게시판(lineageclassic 6485)에서 유사한 내용의 게시물을 여러 차례 검색합니다
-4. 유사도를 분석하여 도용 여부를 판단합니다
+const PROXY = 'https://api.allorigins.win/get?url=';
+const BOARD = 'inven.co.kr/board/lineageclassic/6485';
 
-반드시 아래 JSON 형식만 반환하세요. 마크다운 코드블록(\`\`\`), 설명, 서문 없이 순수 JSON만 반환하세요:
-{
-  "originalPost": {
-    "title": "분석 대상 게시물 제목",
-    "url": "분석 대상 게시물 URL",
-    "summary": "게시물 내용 요약 (한국어, 2-3문장)"
-  },
-  "riskLevel": "high|medium|low|none|unknown",
-  "riskScore": 0부터 100 사이 정수,
-  "explanation": "분석 설명 (한국어, 3-5문장으로 상세히. 왜 이런 판정을 내렸는지 근거 포함)",
-  "suspectedSources": [
-    {
-      "title": "유사 게시물 제목",
-      "url": "유사 게시물 URL",
-      "similarity": "high|medium|low",
-      "evidence": "어떤 부분이 유사한지 구체적 설명 (한국어)"
-    }
-  ]
-}
-riskLevel 기준:
-- high: 핵심 내용이 80% 이상 동일하거나 거의 그대로 복사한 경우
-- medium: 내용의 50~79%가 유사하거나 구조·전략이 매우 비슷한 경우
-- low: 30~49% 유사, 주제만 비슷한 독창적 내용이 있는 경우
-- none: 30% 미만 유사, 독창적인 공략인 경우
-- unknown: 게시물을 찾을 수 없거나 접근이 불가한 경우`;
+// --- Korean stop words ---
+const STOP = new Set(['이','그','저','것','수','들','등','및','을','를','이','가','은','는','에','의','도','와','과','하다','있다','없다','되다','하','을','를','이','에서','으로','로','가','이','한','이다','있','없','하고','또','더','때','같은','같이','위해','통해','대한','대해','많은','많이','모든','이런','이러한','그런','그러한','저런','어떤','어느','제','내','우리','자신','자체','이미','아직','이제','곧','다시','또한','그리고','하지만','그러나','그래서','따라서','즉','단','다만','오직','특히','특별히','정말','매우','아주','너무','조금','약간','잘','더욱','가장','바로','먼저','마지막','결국','사실','실제','다른','새로운','좋은','큰','작은','높은','낮은','빠른','느린','강한','약한','쉬운','어려운','중요한','필요한','가능한','다양한','여러','몇','몇몇','각','각각','모두','전체','전부','전혀','항상','보통','종종','자주','가끔','때로','약','이상','이하','미만','초과','부터','까지','동안','사이','안','밖','위','아래','앞','뒤','왼쪽','오른쪽','그것','이것','저것','누구','무엇','어디','언제','왜','어떻게','얼마나','몇','번','개','명','개월','년','월','일','시','분','초','km','m','cm','kg','g']);
 
-let apiKey = '';
 let isLoading = false;
 
-function init() {
-  const saved = localStorage.getItem('gemini_api_key');
-  if (saved) {
-    apiKey = saved;
-    showMain();
+async function fetchInvenPost(url) {
+  url = url.trim();
+  if (!url.startsWith('http')) url = 'https://' + url;
+  const r = await fetch(PROXY + encodeURIComponent(url));
+  const j = await r.json();
+  const html = j.contents;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // Title
+  let title = '';
+  const titleEl = doc.querySelector('.articleTitle') || doc.querySelector('h1.tit') || doc.querySelector('.view-title') || doc.querySelector('title');
+  if (titleEl) title = titleEl.textContent.trim();
+
+  // Body
+  let body = '';
+  const bodyEl = doc.querySelector('#powerbbsContent') || doc.querySelector('.powerbbsContent') || doc.querySelector('.view-content') || doc.querySelector('.article-content');
+  if (bodyEl) {
+    // Remove script/style
+    bodyEl.querySelectorAll('script,style,img,iframe').forEach(el => el.remove());
+    body = bodyEl.textContent.trim();
   }
-}
-
-function saveKey() {
-  const input = document.getElementById('apiKeyInput').value.trim();
-  if (!input || !input.startsWith('AIza')) {
-    alert('올바른 Gemini API 키를 입력해주세요. (AIza로 시작)');
-    return;
+  if (!body) {
+    // fallback: grab main content area
+    const main = doc.querySelector('.board-view') || doc.querySelector('article') || doc.querySelector('main');
+    if (main) { main.querySelectorAll('script,style').forEach(el => el.remove()); body = main.textContent.trim(); }
   }
-  apiKey = input;
-  localStorage.setItem('gemini_api_key', apiKey);
-  showMain();
+
+  return { title, body, text: (title + ' ' + body).replace(/\s+/g, ' ') };
 }
 
-function showMain() {
-  document.getElementById('setupScreen').classList.remove('active');
-  document.getElementById('mainScreen').classList.add('active');
-  document.getElementById('changeKeyBtn').style.display = '';
+function tokenize(text) {
+  // Split by non-alphanumeric-korean, filter short tokens and stop words
+  return text
+    .replace(/[^\uAC00-\uD7A3\u3130-\u318F\u1100-\u11FFa-zA-Z0-9]/g, ' ')
+    .split(/\s+/)
+    .filter(t => t.length >= 2 && !STOP.has(t));
 }
 
-function showSetup() {
-  document.getElementById('mainScreen').classList.remove('active');
-  document.getElementById('setupScreen').classList.add('active');
-  document.getElementById('changeKeyBtn').style.display = 'none';
-  document.getElementById('apiKeyInput').value = '';
+function tfidf(tokens, allDocs) {
+  const tf = {};
+  tokens.forEach(t => { tf[t] = (tf[t] || 0) + 1; });
+  Object.keys(tf).forEach(t => { tf[t] /= tokens.length; });
+
+  const df = {};
+  allDocs.forEach(doc => {
+    const unique = new Set(doc);
+    unique.forEach(t => { df[t] = (df[t] || 0) + 1; });
+  });
+
+  const vec = {};
+  Object.keys(tf).forEach(t => {
+    const idf = Math.log((allDocs.length + 1) / ((df[t] || 0) + 1)) + 1;
+    vec[t] = tf[t] * idf;
+  });
+  return vec;
+}
+
+function cosine(vecA, vecB) {
+  const keys = new Set([...Object.keys(vecA), ...Object.keys(vecB)]);
+  let dot = 0, magA = 0, magB = 0;
+  keys.forEach(k => {
+    const a = vecA[k] || 0, b = vecB[k] || 0;
+    dot += a * b; magA += a * a; magB += b * b;
+  });
+  if (!magA || !magB) return 0;
+  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
+
+function topKeywords(tokens, n = 15) {
+  const freq = {};
+  tokens.forEach(t => { freq[t] = (freq[t] || 0) + 1; });
+  return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, n).map(e => e[0]);
+}
+
+function riskLevel(score) {
+  if (score >= 0.72) return 'high';
+  if (score >= 0.45) return 'medium';
+  return 'low';
+}
+
+function markStep(id, cls, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'step-item ' + cls;
+  if (label) el.textContent = label;
 }
 
 async function analyze() {
   if (isLoading) return;
-  const url = document.getElementById('urlInput').value.trim();
+  const urlA = document.getElementById('urlA').value.trim();
+  const urlB = document.getElementById('urlB').value.trim();
   const area = document.getElementById('resultArea');
 
-  if (!url) { area.innerHTML = '<div class="error-panel">URL을 입력해주세요.</div>'; return; }
-  if (!url.includes(BOARD_URL)) {
-    area.innerHTML = '<div class="error-panel">인벤 리니지 클래식 팁 게시판(6485)의 URL만 분석 가능합니다.</div>';
+  if (!urlA || !urlB) { area.innerHTML = '<div class="error-panel">두 게시물 URL을 모두 입력해주세요.</div>'; return; }
+  if (!urlA.includes(BOARD) || !urlB.includes(BOARD)) {
+    area.innerHTML = '<div class="error-panel">두 URL 모두 인벤 리니지 클래식 팁 게시판(6485)의 게시물이어야 합니다.</div>';
     return;
   }
+  if (urlA === urlB) { area.innerHTML = '<div class="error-panel">서로 다른 게시물 URL을 입력해주세요.</div>'; return; }
 
   isLoading = true;
   document.getElementById('analyzeBtn').disabled = true;
 
-  area.innerHTML = `
-    <div class="loading-panel">
-      <div class="loading-title"><span class="spinner"></span> AI가 분석하고 있습니다...</div>
-      <div class="step-list">
-        <div class="step-item active" id="s1">게시물 내용 수집 중</div>
-        <div class="step-item" id="s2">유사 게시물 검색 중</div>
-        <div class="step-item" id="s3">유사도 비교 분석 중</div>
-      </div>
-    </div>`;
-
-  const t1 = setTimeout(() => { mark('s1', 'done', '게시물 내용 수집 완료'); mark('s2', 'active'); }, 7000);
-  const t2 = setTimeout(() => { mark('s2', 'done', '유사 게시물 검색 완료'); mark('s3', 'active'); }, 18000);
+  area.innerHTML = `<div class="loading-panel">
+    <div class="loading-title"><span class="spinner"></span> 게시물을 불러오는 중...</div>
+    <div class="step-list">
+      <div class="step-item active" id="s1">게시물 A 내용 수집 중</div>
+      <div class="step-item" id="s2">게시물 B 내용 수집 중</div>
+      <div class="step-item" id="s3">텍스트 유사도 분석 중</div>
+    </div>
+  </div>`;
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: 'user', parts: [{ text: `다음 URL의 게시물을 분석해주세요: ${url}` }] }],
-          tools: [{ google_search: {} }]
-        })
-      }
-    );
-
-    clearTimeout(t1); clearTimeout(t2);
-
-    const data = await res.json();
-
-    if (data.error) {
-      throw new Error(data.error.message || 'API 오류');
-    }
-
-    const raw = data.candidates?.[0]?.content?.parts
-      ?.filter(p => p.text)
-      ?.map(p => p.text)
-      ?.join('') || '';
-
-    let parsed;
+    let postA;
     try {
-      const clean = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-      const jsonStart = clean.indexOf('{');
-      const jsonEnd = clean.lastIndexOf('}');
-      parsed = JSON.parse(clean.slice(jsonStart, jsonEnd + 1));
-    } catch {
-      throw new Error('응답 파싱 실패. 다시 시도해주세요.');
+      postA = await fetchInvenPost(urlA);
+    } catch(e) { throw new Error('게시물 A를 불러오는 데 실패했습니다. URL을 확인해주세요.'); }
+    markStep('s1', 'done', '게시물 A 수집 완료');
+    markStep('s2', 'active');
+
+    let postB;
+    try {
+      postB = await fetchInvenPost(urlB);
+    } catch(e) { throw new Error('게시물 B를 불러오는 데 실패했습니다. URL을 확인해주세요.'); }
+    markStep('s2', 'done', '게시물 B 수집 완료');
+    markStep('s3', 'active');
+
+    // Analysis
+    await new Promise(r => setTimeout(r, 200));
+    const tokA = tokenize(postA.text);
+    const tokB = tokenize(postB.text);
+
+    if (tokA.length < 10 || tokB.length < 10) {
+      throw new Error('게시물 텍스트를 충분히 추출하지 못했습니다. 로그인이 필요한 게시물이거나 접근이 제한되어 있을 수 있습니다.');
     }
 
-    renderResult(parsed);
+    const vecA = tfidf(tokA, [tokA, tokB]);
+    const vecB = tfidf(tokB, [tokA, tokB]);
+    const score = cosine(vecA, vecB);
 
-  } catch (err) {
-    clearTimeout(t1); clearTimeout(t2);
+    const kwA = topKeywords(tokA);
+    const kwB = topKeywords(tokB);
+    const setB = new Set(kwB);
+    const shared = kwA.filter(k => setB.has(k));
+
+    markStep('s3', 'done', '분석 완료');
+
+    renderResult({ postA, postB, urlA, urlB, score, kwA, kwB, shared });
+
+  } catch(err) {
     area.innerHTML = `<div class="error-panel">오류: ${esc(err.message)}</div>`;
   }
 
@@ -617,87 +333,93 @@ async function analyze() {
   document.getElementById('analyzeBtn').disabled = false;
 }
 
-function mark(id, cls, label) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.className = 'step-item ' + cls;
-  if (label) el.textContent = label;
-}
+function renderResult({ postA, postB, urlA, urlB, score, kwA, kwB, shared }) {
+  const pct = Math.round(score * 100);
+  const rl = riskLevel(score);
+  const glyphs = { high: '!!', medium: '△', low: '○' };
+  const labels = { high: '도용 의심 높음', medium: '부분 유사 의심', low: '유사도 낮음' };
+  const sublabels = { high: `코사인 유사도 ${pct}% — 내용이 매우 유사합니다`, medium: `코사인 유사도 ${pct}% — 일부 내용이 유사합니다`, low: `코사인 유사도 ${pct}% — 독창적인 게시물로 판단됩니다` };
 
-function renderResult(d) {
-  const rl = d.riskLevel || 'unknown';
-  const score = d.riskScore ?? 0;
-  const glyphs = { high: '!!', medium: '△', low: '◎', none: '✓', unknown: '?' };
-  const labels = { high: '도용 의심 높음', medium: '부분 유사 의심', low: '유사도 낮음', none: '도용 없음', unknown: '분석 불가' };
-  const simLabels = { high: '높은 유사도', medium: '중간 유사도', low: '낮은 유사도' };
-  const sources = d.suspectedSources || [];
+  const searchQuery = shared.slice(0, 4).join(' ');
+  const searchUrl = `https://www.inven.co.kr/search/webzine/news/?query=${encodeURIComponent(searchQuery)}&site=lineageclassic`;
 
-  let html = '';
-
-  html += `<div class="result-section">
-    <span class="section-label">분석 대상 게시물</span>
-    <div class="post-card">
-      <div class="post-card-title">${esc(d.originalPost?.title || '제목 없음')}</div>
-      <div class="post-card-summary">${esc(d.originalPost?.summary || '')}</div>
-      <a class="post-card-link" href="${esc(d.originalPost?.url || '')}" target="_blank">${esc(d.originalPost?.url || '')}</a>
-    </div>
-  </div>`;
-
-  html += `<div class="result-section">
-    <span class="section-label">판정 결과</span>
-    <div class="risk-banner ${rl}">
-      <div class="risk-glyph ${rl}">${glyphs[rl] || '?'}</div>
-      <div>
-        <div class="risk-label ${rl}">${labels[rl] || rl}</div>
-        ${rl !== 'unknown' ? `<div class="risk-score ${rl}">유사도 점수 ${score}/100</div>` : ''}
+  let html = `
+  <div class="result-section">
+    <span class="section-label">비교 대상</span>
+    <div class="score-wrap">
+      <div class="score-card">
+        <div class="score-card-label">A · 도용 의심 게시물</div>
+        <div class="score-card-title">${esc(postA.title || '제목 없음')}</div>
+        <a class="score-card-url" href="${esc(urlA)}" target="_blank">${esc(urlA)}</a>
+      </div>
+      <div class="score-card">
+        <div class="score-card-label">B · 원본 의심 게시물</div>
+        <div class="score-card-title">${esc(postB.title || '제목 없음')}</div>
+        <a class="score-card-url" href="${esc(urlB)}" target="_blank">${esc(urlB)}</a>
       </div>
     </div>
-  </div>`;
+  </div>
 
-  html += `<div class="result-section">
+  <div class="result-section">
+    <span class="section-label">판정 결과</span>
+    <div class="risk-banner ${rl}">
+      <div class="risk-glyph ${rl}">${glyphs[rl]}</div>
+      <div>
+        <div class="risk-label ${rl}">${labels[rl]}</div>
+        <div class="risk-sub ${rl}">${sublabels[rl]}</div>
+      </div>
+    </div>
+    <div class="detail-card" style="margin-top:8px;">
+      <div class="meter-wrap">
+        <div class="meter-label"><span>유사도</span><span>${pct}%</span></div>
+        <div class="meter-track"><div class="meter-fill ${rl}" style="width:${pct}%"></div></div>
+      </div>
+      <div class="section-label" style="margin-bottom:6px;">공통 핵심 키워드 (${shared.length}개)</div>
+      <div class="keywords-row">
+        ${shared.length > 0 ? shared.map(k => `<span class="kw-chip match">${esc(k)}</span>`).join('') : '<span style="font-size:12px;color:var(--text3)">공통 키워드 없음</span>'}
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
     <span class="section-label">분석 근거</span>
-    <div class="explanation-card">${esc(d.explanation || '')}</div>
-  </div>`;
+    <div class="detail-card">
+      <p>${getExplanation(rl, pct, shared, postA.title, postB.title)}</p>
+    </div>
+  </div>
 
-  html += `<div class="result-section">
-    <span class="section-label">유사 의심 게시물 ${sources.length > 0 ? `(${sources.length}건)` : ''}</span>`;
+  <div class="result-section">
+    <span class="section-label">추가 조사</span>
+    <div class="search-card">
+      <p>비슷한 공략이 게시판에 더 있는지 확인하려면 →
+        <a href="${searchUrl}" target="_blank">인벤에서 "${esc(shared.slice(0,3).join(' '))}" 검색하기</a>
+      </p>
+    </div>
+  </div>
 
-  if (sources.length > 0) {
-    sources.forEach(s => {
-      html += `<div class="source-item">
-        <div class="source-header">
-          <div class="source-title">${esc(s.title || '제목 없음')}</div>
-          <span class="sim-badge ${s.similarity || 'low'}">${simLabels[s.similarity] || ''}</span>
-        </div>
-        <div class="source-evidence">${esc(s.evidence || '')}</div>
-        ${s.url ? `<a class="source-link" href="${esc(s.url)}" target="_blank">${esc(s.url)}</a>` : ''}
-      </div>`;
-    });
-  } else {
-    html += `<div class="explanation-card" style="color: var(--text3); font-size: 13px;">유사한 게시물이 발견되지 않았습니다.</div>`;
-  }
-
-  html += `</div>`;
-  html += `<div class="notice">이 결과는 AI 분석이므로 참고용으로 활용하세요. 최종 판단은 운영진이 직접 원문을 비교해 결정하시기 바랍니다.</div>`;
+  <div class="notice">이 결과는 텍스트 통계(TF-IDF 코사인 유사도) 기반 분석입니다. 같은 게임 주제 특성상 전문 용어가 겹쳐 유사도가 높게 나올 수 있습니다. 최종 판단은 운영진이 원문을 직접 비교해 결정하세요.</div>`;
 
   document.getElementById('resultArea').innerHTML = html;
 }
 
-function esc(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+function getExplanation(rl, pct, shared, titleA, titleB) {
+  const sharedStr = shared.slice(0, 5).map(k => `'${k}'`).join(', ');
+  if (rl === 'high') {
+    return `"${esc(titleA)}"와 "${esc(titleB)}"의 텍스트 유사도가 ${pct}%로 매우 높게 측정되었습니다. ${sharedStr} 등 핵심 키워드가 두 게시물에서 공통으로 다수 발견됩니다. 내용 구조, 수치, 전략 서술 방식이 상당 부분 일치할 가능성이 높습니다. 운영진이 두 게시물의 본문을 직접 대조하여 도용 여부를 확정하시기 바랍니다.`;
+  } else if (rl === 'medium') {
+    return `"${esc(titleA)}"와 "${esc(titleB)}"의 텍스트 유사도가 ${pct}%로 중간 수준입니다. ${sharedStr} 등의 공통 키워드가 발견되어 유사한 주제나 전략을 다루고 있는 것으로 보입니다. 같은 게임 콘텐츠 특성상 용어 중복일 수도 있으나, 구체적인 수치나 문장 구조가 유사하다면 도용 가능성을 배제하기 어렵습니다. 본문을 직접 비교해보시기 권장합니다.`;
+  } else {
+    return `"${esc(titleA)}"와 "${esc(titleB)}"의 텍스트 유사도가 ${pct}%로 낮게 측정되었습니다. 공통 키워드가 ${shared.length > 0 ? `${sharedStr} 등 ${shared.length}개` : '거의 없어'} 두 게시물은 서로 독립적인 내용으로 작성된 것으로 판단됩니다.`;
+  }
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  init();
-  document.getElementById('urlInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') analyze();
-  });
-  document.getElementById('apiKeyInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') saveKey();
+  ['urlA','urlB'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') analyze(); });
   });
 });
 </script>

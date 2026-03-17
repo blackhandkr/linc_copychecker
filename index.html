@@ -373,6 +373,42 @@ function topKeywords(tokens, n=12) {
 }
 
 
+function buildTF(tokens) {
+  const tf = {};
+  tokens.forEach(t => { tf[t] = (tf[t]||0) + 1; });
+  const len = tokens.length || 1;
+  Object.keys(tf).forEach(t => tf[t] /= len);
+  return tf;
+}
+
+function buildIDF(docs) {
+  const df = {}, N = docs.length;
+  docs.forEach(tokens => {
+    new Set(extractNgrams(tokens)).forEach(t => { df[t] = (df[t]||0) + 1; });
+  });
+  const idf = {};
+  Object.keys(df).forEach(t => { idf[t] = Math.log((N+1)/(df[t]+1)) + 1; });
+  return idf;
+}
+
+function tfidfVec(tokens, idf) {
+  const ngrams = extractNgrams(tokens);
+  const tf = buildTF(ngrams);
+  const vec = {};
+  Object.keys(tf).forEach(t => { vec[t] = tf[t] * (idf[t] || Math.log(2) + 1); });
+  return vec;
+}
+
+function cosine(a, b) {
+  let dot=0, ma=0, mb=0;
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  keys.forEach(k => {
+    const av=a[k]||0, bv=b[k]||0;
+    dot+=av*bv; ma+=av*av; mb+=bv*bv;
+  });
+  return (!ma||!mb) ? 0 : dot / Math.sqrt(ma*mb);
+}
+
 function riskLevel(score) {
   if (score >= 0.70) return 'high';
   if (score >= 0.42) return 'medium';
